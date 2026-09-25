@@ -1,0 +1,112 @@
+<div class="row ms-2">
+
+    <div class="col-6">
+        @WorldCity.City, @WorldCity.State
+    </div>
+
+</div>
+
+<div class="row ms-2">
+
+    <div class="col-5 ps-2">
+
+        <img src="@CurrentDto.IconUrl" />
+
+        <span class="weather_current_text1 px-2">
+            @CurrentDto.Temperature
+        </span>
+
+        <span class="weather_current_text2 px-2">
+
+            <a class="btn btn-secondary"
+               @onclick="ConvertToFahrenheit">
+                °F
+            </a>
+
+            &nbsp; | &nbsp;
+
+            <a class="btn btn-secondary"
+               @onclick="ConvertToCelsius">
+                °C
+            </a>
+
+        </span>
+
+    </div>
+
+    <div class="col-2 ps-2">
+
+        <ul>
+            <li>
+                <span class="weather_current_text3 px-2">
+                    Feels Like: @CurrentDto.TemperatureLike
+                </span>
+            </li>
+
+            <li>
+                <span class="weather_current_text3 px-2">
+                    @CurrentDto.Description
+                </span>
+            </li>
+
+            <li>
+                <span class="weather_current_text3 px-2">
+                    @CurrentDto.Humidity
+                </span>
+            </li>
+        </ul>
+
+    </div>
+
+    <div class="col-5 ps-2">
+
+        <ul>
+            <li>
+                <span class="weather_current_text3 px-2">
+                    @CurrentDto.Time
+                </span>
+            </li>
+
+            <li>
+                <span class="weather_current_text3 px-2">
+                    @CurrentDto.Precipitation
+                </span>
+            </li>
+
+            <li>
+                <span class="weather_current_text3 px-2">
+                    @CurrentDto.Humidity
+                </span>
+            </li>
+        </ul>
+
+    </div>
+
+</div>
+
+@code
+{
+    [Parameter]
+    public WorldCity WorldCity { get; set; } = new();
+
+    [Parameter]
+    public CurrentDto CurrentDto { get; set; } = new();
+
+    private void ConvertToFahrenheit()
+    {
+        CurrentDto.Temperature =
+         ((9 * int.Parse(CurrentDto.Temperature) / 5) + 32).ToString();
+
+        CurrentDto.TemperatureLike =
+            ((9 * int.Parse(CurrentDto.TemperatureLike) / 5) + 32).ToString();
+    }
+
+    private void ConvertToCelsius()
+    {
+        CurrentDto.Temperature =
+            ((int.Parse(CurrentDto.Temperature) - 32) * 5 / 9).ToString();
+
+        CurrentDto.TemperatureLike =
+           ((int.Parse(CurrentDto.TemperatureLike) - 32) * 5 / 9).ToString();
+    }
+}

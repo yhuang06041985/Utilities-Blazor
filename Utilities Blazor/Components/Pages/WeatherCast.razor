@@ -1,0 +1,168 @@
+@page "/WeatherCast"
+@rendermode InteractiveServer
+
+@inject IWeatherCast _weatherCastService
+@inject NavigationManager _navigationManager
+@inject ILogger<WeatherCast> _logger
+@inject AppDbContext _dbContext
+
+<br />
+<br />
+
+<h3 class="text-center">Weather Cast Application</h3>
+
+<br />
+
+<div class="container-fluid">
+
+    <div class="row">
+        <div class="col-md-2">
+            <label class="form-label" for="cityName">
+                City Name:
+            </label>
+        </div>
+
+        <div class="col-md-6">
+
+            <input id="cityName"
+                   type="text"
+                   class="form-control"
+                   @bind="locationStr"
+                   @bind:event="oninput"
+                   @bind:after="SearchLocations"
+                   style="width: 400px;"
+                   placeholder="Enter city name..." />
+
+            @if (searchLocations.Any())
+            {
+                <ul class="list-group mt-1" style="width: 200px;">
+                    @foreach (var location in searchLocations)
+                    {
+                        <li class="list-group-item"
+                            style="cursor: pointer;"
+                            @onclick="() => SelectLocation(location)">
+
+                            @location.City, @location.State
+
+                        </li>
+                    }
+                </ul>
+            }
+
+            <br />
+
+            <button class="btn btn-primary"
+                    @onclick="GetWeather">
+
+                Get Weather
+
+            </button>
+
+        </div>
+    </div>
+
+    <br />
+
+    @if (weatherResponse != null)
+    {
+        <div class="row">
+            <div class="col-md-8">
+
+                <h4>Weather</h4>
+
+                <!-- Display your weather information here -->
+                 <WeatherCurrent CurrentDto="forecastDto.Current" WorldCity="worldCity">  </WeatherCurrent>
+
+                <p>
+                    Temperature:
+                    
+                </p>
+                
+            </div>
+        </div>
+    }
+
+   
+
+</div>
+
+
+@code {
+
+    private string locationStr = string.Empty;
+
+    private CurrentDto CurrentDto;
+
+
+    private WeatherResponse? weatherResponse;
+
+    private List<WorldCity> searchLocations = new();
+
+    private ForecastDto? forecastDto = new();
+
+
+    private WorldCity worldCity = new();
+
+
+    private void SearchLocations()
+    {
+        // _logger.LogInformation("SearchLocations fired: {Location}", locationStr);
+
+        if (string.IsNullOrWhiteSpace(locationStr))
+        {
+            searchLocations.Clear();
+            return;
+        }
+
+        var city = locationStr.Split(',');
+
+
+        searchLocations = _dbContext.WorldCities
+          .Where(c => c.City.StartsWith(city[0]))
+          .Take(10)
+          .ToList();
+
+    }
+
+    private void SelectLocation(WorldCity location)
+    {
+        locationStr = $"{location.City}, {location.State}, {location.Country}"; 
+        searchLocations.Clear();
+        worldCity = location;
+    }
+
+
+    private async Task GetWeather()
+    {
+        if (string.IsNullOrWhiteSpace(locationStr))
+        {
+            _logger.LogWarning("City name is empty.");
+            return;
+        }
+
+        var city = worldCity.City;
+        var state = worldCity.State;
+        var country = worldCity.Country;
+
+        var selectedLocation = _dbContext.WorldCities
+                          .Find(worldCity.Id);
+
+
+        if (selectedLocation == null)
+        {
+          _logger.LogWarning(
+              "Location not found: {worldCity.City}, {worlkCity.State}, {worldCity.Country}",
+              city,
+              state, country);
+
+            return;
+        }
+
+
+        forecastDto = await _weatherCastService.GetWeatherAsync(
+          selectedLocation.Latitude,
+          selectedLocation.Longitude);
+
+            
+    }
+}
